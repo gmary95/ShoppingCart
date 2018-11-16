@@ -3,7 +3,7 @@ import UIKit
 class CartTableViewController: UITableViewController {
     @IBOutlet weak var totalPriceLabel: UILabel!
     
-    let cardManager = CartManager.shared
+    let cartManager = CartManager.shared
     let productManager = ProductsManager.shared
     var cellHeights: [IndexPath : CGFloat] = [:]
     
@@ -31,7 +31,7 @@ class CartTableViewController: UITableViewController {
         if productManager.numberOfProducts() > 0 {
             let randomIndex = Int(arc4random_uniform(UInt32(productManager.numberOfProducts())))
             let indexPath = IndexPath(row: randomIndex, section: 0)
-            cardManager.addItem(item: CartModel(product:productManager.product(at: indexPath)))
+            cartManager.addItem(item: CartModel(product:productManager.product(at: indexPath)))
             updateTotalPrice()
             tableView.reloadData()
         } else {
@@ -42,20 +42,20 @@ class CartTableViewController: UITableViewController {
     }
     
     @IBAction func checkout(_ sender: UIBarButtonItem) {
-        if cardManager.numberOfItemsInCart() == 0 {
+        if cartManager.numberOfItemsInCart() == 0 {
             let alert = UIAlertController.init(title: Constants.CartConstants.alertCartTitle, message: Constants.CartConstants.alertCartMessage, preferredStyle: .alert)
             alert.addAction(UIAlertAction.init(title: Constants.CartConstants.alertCancelButton, style: .cancel))
             self.present(alert, animated: true, completion: nil)
         } else {
             self.performSegue(withIdentifier: Constants.SegueConstants.cartToOrderSegue, sender: sender)
             if let checkoutController = self.navigationController?.topViewController as? CheckoutViewController {
-                checkoutController.checkoutListString = cardManager.itemArrayToString()
+                checkoutController.checkoutListString = cartManager.itemArrayToString()
             }
         }
     }
     
     func updateTotalPrice() {
-        let totalPriceString = itemPriceFormatter.string(from: cardManager.totalPriceInCart() as NSNumber)
+        let totalPriceString = itemPriceFormatter.string(from: cartManager.totalPriceInCart() as NSNumber)
         totalPriceLabel.text = Constants.CartConstants.totalPriceString + totalPriceString!
     }
     
@@ -79,7 +79,7 @@ class CartTableViewController: UITableViewController {
 extension CartTableViewController: CartTableViewCellDelegate {
     func cartTableViewCellSetQuantity(_ cell: CartTableViewCell, quantity: Int64) {
         let indexPath = IndexPath(row: cell.tag, section: 0)
-        cardManager.updateItemQuantity(at: indexPath, quantity: quantity)
+        cartManager.updateItemQuantity(at: indexPath, quantity: quantity)
         updateTotalPrice()
     }
     
@@ -88,14 +88,14 @@ extension CartTableViewController: CartTableViewCellDelegate {
 extension CartTableViewController {
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if cardManager.numberOfItemsInCart() == 0 {
+        if cartManager.numberOfItemsInCart() == 0 {
             tableView.setEmptyMessage(Constants.CartConstants.emptyViewMessage)
             totalPriceLabel.isHidden = true
         } else {
             tableView.restore()
             totalPriceLabel.isHidden = false
         }
-        return cardManager.numberOfItemsInCart()
+        return cartManager.numberOfItemsInCart()
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -103,7 +103,7 @@ extension CartTableViewController {
         cell.delegate = self
         cell.tag = indexPath.row
         
-        let item = cardManager.item(at: indexPath)
+        let item = cartManager.item(at: indexPath)
         let product = item?.product
         
         cell.titleLabel.text = product?.title ?? ""
@@ -139,9 +139,9 @@ extension CartTableViewController {
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         
         if editingStyle == .delete {
-            let productAtIndex = cardManager.item(at:  indexPath)
+            let productAtIndex = cartManager.item(at:  indexPath)
             if let product = productAtIndex  {
-                let successful = cardManager.removeProduct(item: product)
+                let successful = cartManager.removeProduct(item: product)
                 
                 if successful == true {
                     tableView.beginUpdates()
